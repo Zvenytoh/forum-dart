@@ -1,10 +1,9 @@
 // ignore_for_file: library_private_types_in_public_api
-
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:crypto/crypto.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -74,26 +73,100 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Forum')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      appBar: AppBar(
+        title: Row(
           children: [
-            ElevatedButton(
-              onPressed: () => Navigator.pushNamed(context, '/login'),
-              child: const Text('Se connecter'),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () => Navigator.pushNamed(context, '/register'),
-              child: const Text('Créer un compte'),
-            ),
+            Icon(Icons.chat_bubble, size: 26, color: Colors.white),
+            const SizedBox(width: 8),
+            const Text('Forum', style: TextStyle(fontSize: 24)),
           ],
+        ),
+        backgroundColor: const Color(0xFF1E3A8A),
+        elevation: 6.0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.login, size: 24, color: Colors.white),
+            onPressed: () => Navigator.pushNamed(context, '/login'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.person_add, size: 24, color: Colors.white),
+            onPressed: () => Navigator.pushNamed(context, '/register'),
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Bienvenue sur le Forum!',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E3A8A),
+                  letterSpacing: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+              // Boutons sans animation
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
+class CustomButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final String label;
+  final Color color;
+
+  const CustomButton({
+    super.key,
+    required this.onPressed,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black,
+              offset: const Offset(0, 4),
+              blurRadius: 8,
+            ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -163,7 +236,7 @@ class _LoginPageState extends State<LoginPage> {
                   obscureText: true,
                   validator:
                       (value) =>
-                          value!.length >= 6 ? null : '6 caractères minimum',
+                          value!.length >= 2 ? null : '6 caractères minimum',
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
@@ -190,11 +263,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-String hashPassword(String password) {
-  final bytes = utf8.encode(password);
-  final digest = sha256.convert(bytes);
-  return digest.toString();
-}
+
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -225,7 +294,7 @@ class _RegisterPageState extends State<RegisterPage> {
     final result = await api.post('users', {
       'email': _emailController.text,
       'roles': ['ROLE_USER'],
-      'password': hashPassword(_passwordController.text),
+      'password': (_passwordController.text),
       'nom': _lastNameController.text,
       'prenom': _firstNameController.text,
       'dateInscription': DateTime.now().toIso8601String(),
