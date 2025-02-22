@@ -1,16 +1,15 @@
-// ignore_for_file: library_private_types_in_public_api
-
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
 import 'package:crypto/crypto.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-final String baseUrl = 'https://s3-4204.nuage-peda.fr/forum/api/';
+const String baseUrl = 'https://s3-4204.nuage-peda.fr/forum/api/';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -29,43 +28,55 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
 class ApiService {
-  static const String _baseUrl = 'https://s3-4204.nuage-peda.fr/forum/api';
+  static const String _baseUrl = baseUrl;
   final FlutterSecureStorage storage = const FlutterSecureStorage();
 
   Future<String?> get jwtToken async => await storage.read(key: 'jwt_token');
 
-  Future<Map<String, dynamic>> post(String endpoint, dynamic body) async {
-    final String? token = await jwtToken;
-    final Uri url = Uri.parse('$_baseUrl/$endpoint');
+  Future<Map<String, dynamic>> post(String endpoint, Map<String, dynamic> data, {bool requiresAuth = false}) async {
+    final uri = Uri.parse('$_baseUrl$endpoint');
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (requiresAuth) 'Authorization': 'Bearer ${await jwtToken ?? ''}',
+    };
 
     final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/ld+json',
-        'Accept': 'application/ld+json',
-        if (token != null) 'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode(body),
+      uri,
+      headers: headers,
+      body: json.encode(data),
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return jsonDecode(response.body);
+      return json.decode(response.body);
     } else {
-
-      throw HttpException(response.statusCode, jsonDecode(response.body));
+      throw HttpException('Erreur HTTP ${response.statusCode}: ${response.body}');
     }
+  }
+
+  Future<void> login(String email, String password) async {
+    final response = await post('authentication_token', {
+      'email': email,
+      'password': password,
+    });
+    await storage.write(key: 'jwt_token', value: response['token']);
+  }
+
+  Future<void> logout() async {
+    await storage.delete(key: 'jwt_token');
   }
 }
 
 class HttpException implements Exception {
-  final int statusCode;
-  final dynamic data;
+  final String message;
 
-  HttpException(this.statusCode, this.data);
+  HttpException(this.message);
 
   @override
-  String toString() => 'HTTP Error $statusCode: $data';
+  String toString() => message;
 }
 
 class HomePage extends StatelessWidget {
@@ -119,19 +130,12 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       final api = ApiService();
-      final response = await api.post('authentication_token', {
-        'username': _emailController.text,
-        'password': _passwordController.text,
-      });
-
-      await api.storage.write(key: 'jwt_token', value: response['token']);
+      await api.login(_emailController.text, _passwordController.text);
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/forum');
       }
     } on HttpException catch (e) {
-      setState(
-        () => _errorMessage = e.data['message'] ?? 'Erreur de connexion',
-      );
+      setState(() => _errorMessage = e.toString());
     } catch (e) {
       setState(() => _errorMessage = 'Erreur inconnue');
     } finally {
@@ -154,24 +158,21 @@ class _LoginPageState extends State<LoginPage> {
                   controller: _emailController,
                   decoration: const InputDecoration(labelText: 'Email'),
                   keyboardType: TextInputType.emailAddress,
-                  validator:
-                      (value) => value!.contains('@') ? null : 'Email invalide',
+                  validator: (value) => value!.contains('@') ? null : 'Email invalide',
                 ),
                 TextFormField(
                   controller: _passwordController,
                   decoration: const InputDecoration(labelText: 'Mot de passe'),
                   obscureText: true,
-                  validator:
-                      (value) =>
-                          value!.length >= 6 ? null : '6 caractères minimum',
+                  validator: (value) =>
+                      value!.length >= 6 ? null : '6 caractères minimum',
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _submit,
-                  child:
-                      _isLoading
-                          ? const CircularProgressIndicator()
-                          : const Text('Se connecter'),
+                  child: _isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text('Se connecter'),
                 ),
                 if (_errorMessage.isNotEmpty)
                   Padding(
@@ -213,43 +214,37 @@ class _RegisterPageState extends State<RegisterPage> {
   String _errorMessage = '';
 
   Future<void> _submit() async {
-  if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) return;
 
-  setState(() {
-    _isLoading = true;
-    _errorMessage = '';
-  });
-
-  try {
-    final api = ApiService();
-    final result = await api.post('users', {
-      'email': _emailController.text,
-      'roles': ['ROLE_USER'],
-      'password': _passwordController.text,
-      'nom': _lastNameController.text,
-      'prenom': _firstNameController.text,
-      'dateInscription': DateTime.now().toIso8601String(),
-      'messages': [],
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
     });
-    debugPrint("Inscription réussie : $result");
 
-    if (!mounted) return;
-    Navigator.pop(context);
-  } on HttpException catch (e) {
-    // Affiche l'erreur complète dans la console pour le debug
-    debugPrint("HttpException lors de l'inscription : ${e.toString()}");
-    setState(() => _errorMessage = e.toString());
-  } catch (e, stacktrace) {
-    // Affiche l'erreur et la stack trace dans la console
-    debugPrint("Erreur inconnue lors de l'inscription : $e");
-    debugPrint(stacktrace.toString());
-    setState(() => _errorMessage = 'Erreur inconnue : $e');
-  } finally {
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+    try {
+      final api = ApiService();
+      final result = await api.post('users', {
+        'email': _emailController.text,
+        'roles': ['ROLE_USER'],
+        'password': _passwordController.text,
+        'nom': _lastNameController.text,
+        'prenom': _firstNameController.text,
+        'dateInscription': DateTime.now().toIso8601String(),
+        'messages': [],
+      });
+      debugPrint("Inscription réussie : $result");
+      if (mounted) Navigator.pop(context);
+    } on HttpException catch (e) {
+      debugPrint("HttpException lors de l'inscription : ${e.toString()}");
+      setState(() => _errorMessage = e.toString());
+    } catch (e, stacktrace) {
+      debugPrint("Erreur inconnue lors de l'inscription : $e");
+      debugPrint(stacktrace.toString());
+      setState(() => _errorMessage = 'Erreur inconnue : $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -259,43 +254,43 @@ class _RegisterPageState extends State<RegisterPage> {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-                validator: (value) => value!.isEmpty ? 'Email requis' : null,
-              ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator:
-                    (value) => value!.isEmpty ? 'Mot de passe requis' : null,
-              ),
-              TextFormField(
-                controller: _lastNameController,
-                decoration: const InputDecoration(labelText: 'Nom'),
-                validator: (value) => value!.isEmpty ? 'Nom requis' : null,
-              ),
-              TextFormField(
-                controller: _firstNameController,
-                decoration: const InputDecoration(labelText: 'Prénom'),
-                validator: (value) => value!.isEmpty ? 'Prénom requis' : null,
-              ),
-              if (_errorMessage.isNotEmpty) ...[
-                const SizedBox(height: 10),
-                Text(_errorMessage, style: const TextStyle(color: Colors.red)),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                  validator: (value) => value!.isEmpty ? 'Email requis' : null,
+                ),
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(labelText: 'Password'),
+                  obscureText: true,
+                  validator: (value) => value!.isEmpty ? 'Mot de passe requis' : null,
+                ),
+                TextFormField(
+                  controller: _lastNameController,
+                  decoration: const InputDecoration(labelText: 'Nom'),
+                  validator: (value) => value!.isEmpty ? 'Nom requis' : null,
+                ),
+                TextFormField(
+                  controller: _firstNameController,
+                  decoration: const InputDecoration(labelText: 'Prénom'),
+                  validator: (value) => value!.isEmpty ? 'Prénom requis' : null,
+                ),
+                if (_errorMessage.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(_errorMessage, style: const TextStyle(color: Colors.red)),
+                ],
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _submit,
+                  child: _isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text('S\'inscrire'),
+                ),
               ],
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submit,
-                child:
-                    _isLoading
-                        ? const CircularProgressIndicator()
-                        : const Text('S\'inscrire'),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -320,8 +315,10 @@ class _ForumPageState extends State<ForumPage> {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              await const FlutterSecureStorage().delete(key: 'jwt_token');
+              final api = ApiService();
+              await api.logout();
               if (!mounted) return;
+              // Utilise addPostFrameCallback pour assurer la navigation après le build
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 Navigator.pushReplacementNamed(context, '/');
               });
