@@ -1,8 +1,8 @@
-// ignore_for_file: library_private_types_in_public_api
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
 
 
 void main() {
@@ -28,6 +28,8 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+
 class ApiService {
   static const String _baseUrl = 'https://s3-4204.nuage-peda.fr/forum/api';
   final FlutterSecureStorage storage = const FlutterSecureStorage();
@@ -146,7 +148,7 @@ class CustomButton extends StatelessWidget {
             BoxShadow(
               color: Colors.black,
               offset: const Offset(0, 4),
-              blurRadius: 8,
+              blurRadius: 8, 
             ),
           ],
         ),
