@@ -225,7 +225,7 @@ class _RegisterPageState extends State<RegisterPage> {
     final result = await api.post('users', {
       'email': _emailController.text,
       'roles': ['ROLE_USER'],
-      'password': _passwordController.text,
+      'password': hashPassword(_passwordController.text),
       'nom': _lastNameController.text,
       'prenom': _firstNameController.text,
       'dateInscription': DateTime.now().toIso8601String(),
