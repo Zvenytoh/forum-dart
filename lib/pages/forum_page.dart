@@ -57,32 +57,33 @@ class _ForumPageState extends State<ForumPage> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage.isNotEmpty
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _errorMessage.isNotEmpty
               ? Center(child: Text(_errorMessage))
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _messages.length,
-                  itemBuilder: (context, index) {
-                    final message = _messages[index];
-                    return Card(
-                      elevation: 4,
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      child: ListTile(
-                        title: Text(message['titre'] ?? 'Sans titre'),
-                        subtitle: Text(message['contenu'] ?? 'Pas de contenu'),
-                        onTap: () {
-                          Navigator.pushNamed(
+                padding: const EdgeInsets.all(16),
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  final message = _messages[index];
+                  return Card(
+                    elevation: 4,
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    child: ListTile(
+                      title: Text(message['titre'] ?? 'Sans titre'),
+                      subtitle: Text(message['contenu'] ?? 'Pas de contenu'),
+                      onTap: () {
+                        Navigator.pushNamed(
                             context,
                             '/messageDetails',
                             arguments: message,
                           );
-                        },
-                      ),
-                    );
-                  },
-                ),
+                      },
+                    ),
+                  );
+                },
+              ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.pushNamed(

@@ -3,7 +3,6 @@ import 'package:myapp/services/api_service.dart';
 
 class MessageDetailsPage extends StatefulWidget {
   final Map<String, dynamic> message;
-
   const MessageDetailsPage({super.key, required this.message});
 
   @override

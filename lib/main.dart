@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:myapp/pages/forum_page.dart';
 import 'package:myapp/pages/home_page.dart';
 import 'package:myapp/pages/login_page.dart';
+import 'package:myapp/pages/message_detail_page.dart';
 import 'package:myapp/pages/new_message_page.dart';
 import 'package:myapp/pages/register_page.dart';
 
@@ -18,13 +19,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
+      initialRoute: '/forum',
       routes: {
         '/': (context) => const HomePage(),
         '/login': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
         '/forum': (context) => const ForumPage(),
         '/newMessage': (context) => const NewMessagePage(),
+        '/messageDetail': (context) => const MessageDetailsPage(message: {},),
       },
     );
   }
