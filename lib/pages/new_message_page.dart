@@ -43,40 +43,126 @@ class _NewMessagePageState extends State<NewMessagePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Nouveau message')),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
+      appBar: AppBar(
+        title: const Text(
+          'Nouveau message',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.deepPurple,
+        elevation: 10,
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple.withOpacity(0.8), Colors.indigo.withOpacity(0.8)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
           child: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextFormField(
-                  controller: _titreController,
-                  decoration: const InputDecoration(labelText: 'Titre'),
-                  validator: (value) => value!.isEmpty ? 'Titre requis' : null,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Card(
+                elevation: 10,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _contenuController,
-                  decoration: const InputDecoration(labelText: 'Contenu'),
-                  maxLines: 5,
-                  validator: (value) => value!.isEmpty ? 'Contenu requis' : null,
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _submit,
-                  child: _isLoading ? const CircularProgressIndicator() : const Text('Envoyer'),
-                ),
-                if (_errorMessage.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: Text(
-                      _errorMessage,
-                      style: const TextStyle(color: Colors.red),
+                child: Padding(
+                  padding: const EdgeInsets.all(30),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Titre
+                        Text(
+                          'Créer un nouveau message',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.deepPurple,
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        // Champ Titre
+                        TextFormField(
+                          controller: _titreController,
+                          decoration: InputDecoration(
+                            labelText: 'Titre',
+                            prefixIcon: Icon(Icons.title, color: Colors.deepPurple),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          validator: (value) => value!.isEmpty ? 'Titre requis' : null,
+                        ),
+                        SizedBox(height: 20),
+                        // Champ Contenu
+                        TextFormField(
+                          controller: _contenuController,
+                          decoration: InputDecoration(
+                            labelText: 'Contenu',
+                            prefixIcon: Icon(Icons.message, color: Colors.deepPurple),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.deepPurple, width: 2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          maxLines: 5,
+                          validator: (value) => value!.isEmpty ? 'Contenu requis' : null,
+                        ),
+                        SizedBox(height: 30),
+                        // Bouton Envoyer
+                        ElevatedButton(
+                          onPressed: _isLoading ? null : _submit,
+                          style: ElevatedButton.styleFrom(
+                            iconColor: Colors.deepPurple,
+                            padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            elevation: 5,
+                          ),
+                          child: _isLoading
+                              ? CircularProgressIndicator(color: Colors.white)
+                              : Text(
+                                  'Envoyer',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                        ),
+                        // Affichage des erreurs
+                        if (_errorMessage.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 20),
+                            child: Text(
+                              _errorMessage,
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-              ],
+                ),
+              ),
             ),
           ),
         ),
