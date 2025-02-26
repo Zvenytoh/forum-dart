@@ -3,6 +3,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:myapp/pages/search_page.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -23,6 +25,7 @@ class MyApp extends StatelessWidget {
         '/register': (context) => const RegisterPage(),
         '/forum': (context) => const ForumPage(),
         '/newMessage': (context) => const NewMessagePage(),
+        '/search': (context) => const SearchForumPage(),
       },
     );
   }
