@@ -1,7 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/widgets/bottomNavBar.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int _currentIndex = 0;
+
+  void _onItemTapped(int index) {
+  setState(() {
+    _currentIndex = index;
+  });
+
+  switch (index) {
+    case 0:
+      Navigator.popAndPushNamed(context, '/');
+      break;
+    case 1:
+      Navigator.popAndPushNamed(context, '/forum');
+      break;
+    case 2:
+      Navigator.popAndPushNamed(context, '/profil');
+      break;
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -15,8 +41,8 @@ class HomePage extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.deepPurple, // Couleur de fond plus riche
-        elevation: 10, // Ombre portée
+        backgroundColor: Colors.deepPurple,
+        elevation: 10,
         actions: [
           IconButton(
             icon: const Icon(Icons.login, color: Colors.white),
@@ -37,12 +63,15 @@ class HomePage extends StatelessWidget {
             Container(
               height: 300,
               decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/forum_header.jpg'), // Image de fond
+                image: const DecorationImage(
+                  image: AssetImage('assets/images/forum_header.jpg'),
                   fit: BoxFit.cover,
                 ),
                 gradient: LinearGradient(
-                  colors: [Colors.deepPurple.withOpacity(0.6), Colors.indigo.withOpacity(0.6)],
+                  colors: [
+                    Colors.deepPurple.withOpacity(0.6),
+                    Colors.indigo.withOpacity(0.6),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -51,7 +80,7 @@ class HomePage extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
+                    const Text(
                       'Bienvenue sur le Forum!',
                       style: TextStyle(
                         fontSize: 36,
@@ -60,7 +89,7 @@ class HomePage extends StatelessWidget {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Text(
                       'Participez à des discussions enrichissantes',
                       style: TextStyle(
@@ -73,39 +102,6 @@ class HomePage extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: 30),
-            // Section de fonctionnalités
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  // Carte de fonctionnalité 1
-                  _buildFeatureCard(
-                    icon: Icons.forum,
-                    title: 'Discussions Actives',
-                    description: 'Rejoignez des conversations dynamiques et partagez vos idées.',
-                    color: Colors.deepPurple,
-                  ),
-                  SizedBox(height: 20),
-                  // Carte de fonctionnalité 2
-                  _buildFeatureCard(
-                    icon: Icons.people,
-                    title: 'Communauté Engagée',
-                    description: 'Rencontrez des personnes partageant les mêmes intérêts.',
-                    color: Colors.indigo,
-                  ),
-                  SizedBox(height: 20),
-                  // Carte de fonctionnalité 3
-                  _buildFeatureCard(
-                    icon: Icons.trending_up,
-                    title: 'Tendances',
-                    description: 'Découvrez les sujets les plus populaires du moment.',
-                    color: Colors.blueAccent,
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 30),
             // Boutons d'action
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -114,14 +110,15 @@ class HomePage extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () => Navigator.pushNamed(context, '/login'),
                     style: ElevatedButton.styleFrom(
-                      iconColor: Colors.deepPurple,
-                      padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                      backgroundColor: Colors.deepPurple,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 50, vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
                       elevation: 5,
                     ),
-                    child: Text(
+                    child: const Text(
                       'Se Connecter',
                       style: TextStyle(
                         fontSize: 18,
@@ -129,17 +126,18 @@ class HomePage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: 15),
+                  const SizedBox(height: 15),
                   OutlinedButton(
                     onPressed: () => Navigator.pushNamed(context, '/register'),
                     style: OutlinedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 50, vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
-                      side: BorderSide(color: Colors.deepPurple, width: 2),
+                      side: const BorderSide(color: Colors.deepPurple, width: 2),
                     ),
-                    child: Text(
+                    child: const Text(
                       'S\'inscrire',
                       style: TextStyle(
                         fontSize: 18,
@@ -150,56 +148,13 @@ class HomePage extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
           ],
         ),
       ),
-    );
-  }
-
-  // Fonction pour construire une carte de fonctionnalité
-  Widget _buildFeatureCard({
-    required IconData icon,
-    required String title,
-    required String description,
-    required Color color,
-  }) {
-    return Card(
-      elevation: 5,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Icon(icon, size: 40, color: color),
-            SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[700],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _currentIndex,
+        onTap: _onItemTapped,
       ),
     );
   }

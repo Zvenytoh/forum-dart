@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import 'package:myapp/widgets/bottomNavBar.dart'; // Assurez-vous que le BottomNavBar est importé
 
 class ForumPage extends StatefulWidget {
   const ForumPage({super.key});
@@ -13,6 +14,7 @@ class _ForumPageState extends State<ForumPage> {
   List<Map<String, dynamic>> _messages = [];
   bool _isLoading = true;
   String _errorMessage = '';
+  int _currentIndex = 1; // ForumPage devrait être sélectionné dans la bottom nav
 
   @override
   void initState() {
@@ -39,6 +41,23 @@ class _ForumPageState extends State<ForumPage> {
     }
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+    switch (index) {
+      case 0:
+        Navigator.popAndPushNamed(context, '/');
+        break;
+      case 1:
+        Navigator.popAndPushNamed(context, '/forum');
+        break;
+      case 2:
+        Navigator.popAndPushNamed(context, '/profil');
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,7 +72,6 @@ class _ForumPageState extends State<ForumPage> {
         ),
         backgroundColor: Colors.deepPurple,
         elevation: 10,
-        iconTheme: IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -71,25 +89,23 @@ class _ForumPageState extends State<ForumPage> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.deepPurple.withOpacity(0.8), Colors.indigo.withOpacity(0.8)],
+            colors: [
+              Colors.deepPurple.withOpacity(0.8),
+              Colors.indigo.withOpacity(0.8),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
         child: _isLoading
             ? const Center(
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                ),
+                child: CircularProgressIndicator(color: Colors.white),
               )
             : _errorMessage.isNotEmpty
                 ? Center(
                     child: Text(
                       _errorMessage,
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                      ),
+                      style: TextStyle(fontSize: 18, color: Colors.white),
                     ),
                   )
                 : ListView.builder(
@@ -125,10 +141,32 @@ class _ForumPageState extends State<ForumPage> {
                             color: Colors.deepPurple,
                           ),
                           onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/messageDetails',
-                              arguments: message,
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text(
+                                    message['repondre'] != null
+                                        ? message['repondre']['titre']
+                                            .toString()
+                                        : 'Aucune réponse',
+                                  ),
+                                  content: Text(
+                                    message['repondre'] != null
+                                        ? message['repondre']['contenu']
+                                            .toString()
+                                        : 'Aucune réponse',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text('OK'),
+                                    ),
+                                  ],
+                                );
+                              },
                             );
                           },
                         ),
@@ -145,10 +183,11 @@ class _ForumPageState extends State<ForumPage> {
         },
         backgroundColor: Colors.deepPurple,
         elevation: 10,
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-        ),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _currentIndex,
+        onTap: _onItemTapped,
       ),
     );
   }

@@ -147,7 +147,7 @@ class _LoginPageState extends State<LoginPage> {
                         SizedBox(height: 20),
                         // Lien vers l'inscription
                         TextButton(
-                          onPressed: () => Navigator.pushNamed(context, '/register'),
+                          onPressed: () => Navigator.popAndPushNamed(context, '/register'),
                           child: Text(
                             'Pas de compte ? Inscrivez-vous',
                             style: TextStyle(
