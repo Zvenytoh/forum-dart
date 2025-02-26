@@ -102,53 +102,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            // Boutons d'action
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  ElevatedButton(
-                    onPressed: () => Navigator.pushNamed(context, '/login'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurple,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 50, vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 5,
-                    ),
-                    child: const Text(
-                      'Se Connecter',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  OutlinedButton(
-                    onPressed: () => Navigator.pushNamed(context, '/register'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 50, vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      side: const BorderSide(color: Colors.deepPurple, width: 2),
-                    ),
-                    child: const Text(
-                      'S\'inscrire',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.deepPurple,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 40),
           ],
         ),
       ),

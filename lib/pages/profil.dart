@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/services/api_service.dart'; // Assurez-vous que votre service API est importé
-import 'package:myapp/widgets/bottomNavBar.dart'; // Assurez-vous que le BottomNavBar est importé
+import 'package:myapp/services/api_service.dart';
+import 'package:myapp/widgets/bottomNavBar.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -10,22 +10,37 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  int _currentIndex = 2; // ProfilePage doit être sélectionné dans la bottom nav
+  int _currentIndex = 2;
+  late Future<Map<String, dynamic>> _userData;
+  bool _isLoggedIn = false;
 
-  // Méthode de gestion de la navigation dans la barre de navigation en bas
-  void _onItemTapped(int index) {
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthentication();
+  }
+
+  Future<void> _checkAuthentication() async {
+    final isAuthenticated = await ApiService().checkAuthentication();
+    if (isAuthenticated) {
+      _userData = ApiService().getUserData();
+    }
     setState(() {
-      _currentIndex = index;
+      _isLoggedIn = isAuthenticated;
     });
+  }
+
+  void _onItemTapped(int index) {
+    setState(() => _currentIndex = index);
     switch (index) {
       case 0:
-      Navigator.popAndPushNamed(context, '/');
+        Navigator.pushReplacementNamed(context, '/');
         break;
       case 1:
-        Navigator.popAndPushNamed(context, '/forum');
+        Navigator.pushReplacementNamed(context, '/forum');
         break;
       case 2:
-        Navigator.popAndPushNamed(context, '/profile');
+        Navigator.pushReplacementNamed(context, '/profile');
         break;
     }
   }
@@ -48,81 +63,153 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Avatar et nom d'utilisateur
-            const CircleAvatar(
-              radius: 60,
-              backgroundImage: AssetImage('assets/images/default_profile.jpg'),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'John Doe', // Remplacez par le nom de l'utilisateur
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.deepPurple,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'john.doe@example.com', // Remplacez par l'email de l'utilisateur
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 30),
+        child: FutureBuilder<Map<String, dynamic>>(
+          future: _isLoggedIn ? _userData : null,
+          builder: (context, snapshot) {
+            return Center(  // Utilisation du widget Center
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center, // Centrer les éléments
+                children: [
+                  // Avatar et informations utilisateur
+                  CircleAvatar(
+                    radius: 60,
+                    backgroundImage:
+                        _isLoggedIn
+                            ? NetworkImage(snapshot.data?['avatar'] ?? '')
+                            : const AssetImage(
+                                  'assets/images/default_profile.jpg',
+                                )
+                                as ImageProvider,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    _isLoggedIn
+                        ? (snapshot.data?['name'] ?? 'Invité') // Correction ici
+                        : 'Invité',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    _isLoggedIn
+                        ? (snapshot.data?['email'] ??
+                            'invité@example.com') // Correction ici
+                        : 'invité@example.com',
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 30),
+                  if (_isLoggedIn) ...[
+                    _buildProfileSection(
+                      icon: Icons.person,
+                      title: 'Informations personnelles',
+                      onTap: () => Navigator.pushNamed(context, '/editProfile'),
+                    ),
+                    _buildProfileSection(
+                      icon: Icons.security,
+                      title: 'Sécurité',
+                      onTap: () => Navigator.pushNamed(context, '/security'),
+                    ),
+                    _buildProfileSection(
+                      icon: Icons.settings,
+                      title: 'Paramètres',
+                      onTap: () => Navigator.pushNamed(context, '/settings'),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
 
-            // Section des informations
-            _buildProfileSection(
-              icon: Icons.person,
-              title: 'Informations personnelles',
-              onTap: () {
-                Navigator.pushNamed(context, '/editProfile');
-              },
-            ),
-            _buildProfileSection(
-              icon: Icons.security,
-              title: 'Sécurité',
-              onTap: () {
-                Navigator.pushNamed(context, '/security');
-              },
-            ),
-            _buildProfileSection(
-              icon: Icons.settings,
-              title: 'Paramètres',
-              onTap: () {
-                Navigator.pushNamed(context, '/settings');
-              },
-            ),
-            const SizedBox(height: 20),
-
-            // Bouton de déconnexion
-            ElevatedButton(
-              onPressed: () async {
-                final apiService = ApiService(); // Utilisez votre service API
-                await apiService.logout();
-                if (!context.mounted) return;
-                Navigator.pushReplacementNamed(context, '/login');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
+                  // Boutons d'action
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child:
+                        _isLoggedIn
+                            ? ElevatedButton(
+                                onPressed: () async {
+                                  await ApiService().logout();
+                                  if (!context.mounted) return;
+                                  Navigator.pushReplacementNamed(context, '/profil');
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 50,
+                                    vertical: 15,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Se déconnecter',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              )
+                            : Column(
+                                children: [
+                                  ElevatedButton(
+                                    onPressed:
+                                        () =>
+                                            Navigator.pushNamed(context, '/login'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.deepPurple,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 50,
+                                        vertical: 15,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(30),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Se Connecter',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 15),
+                                  OutlinedButton(
+                                    onPressed:
+                                        () => Navigator.pushNamed(
+                                          context,
+                                          '/register',
+                                        ),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 50,
+                                        vertical: 15,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(30),
+                                      ),
+                                      side: const BorderSide(
+                                        color: Colors.deepPurple,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'S\'inscrire',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.deepPurple,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                  ),
+                  const SizedBox(height: 40),
+                ],
               ),
-              child: const Text(
-                'Se déconnecter',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
       bottomNavigationBar: BottomNavBar(
@@ -132,7 +219,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Widget pour construire une section du profil
   Widget _buildProfileSection({
     required IconData icon,
     required String title,
@@ -141,17 +227,12 @@ class _ProfilePageState extends State<ProfilePage> {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: ListTile(
         leading: Icon(icon, color: Colors.deepPurple),
         title: Text(
           title,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: onTap,

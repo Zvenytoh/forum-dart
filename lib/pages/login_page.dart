@@ -27,7 +27,7 @@ class _LoginPageState extends State<LoginPage> {
       final api = ApiService();
       await api.login(_emailController.text, _passwordController.text);
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/forum');
+        Navigator.popAndPushNamed(context, '/profil');
       }
     } on HttpException catch (e) {
       setState(() => _errorMessage = e.toString());
