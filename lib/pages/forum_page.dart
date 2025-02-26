@@ -71,70 +71,93 @@ class _ForumPageState extends State<ForumPage> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.deepPurple.withOpacity(0.8), Colors.indigo.withOpacity(0.8)],
+            colors: [
+              Colors.deepPurple.withOpacity(0.8),
+              Colors.indigo.withOpacity(0.8),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
-        child: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                ),
-              )
-            : _errorMessage.isNotEmpty
+        child:
+            _isLoading
+                ? const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                )
+                : _errorMessage.isNotEmpty
                 ? Center(
-                    child: Text(
-                      _errorMessage,
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                      ),
-                    ),
-                  )
+                  child: Text(
+                    _errorMessage,
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                )
                 : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      final message = _messages[index];
-                      return Card(
-                        elevation: 10,
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(16),
-                          title: Text(
-                            message['titre'] ?? 'Sans titre',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.deepPurple,
-                            ),
-                          ),
-                          subtitle: Text(
-                            message['contenu'] ?? 'Pas de contenu',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                          trailing: Icon(
-                            Icons.arrow_forward_ios,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _messages.length,
+                  itemBuilder: (context, index) {
+                    final message = _messages[index];
+                    return Card(
+                      elevation: 10,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        title: Text(
+                          message['titre'] ?? 'Sans titre',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                             color: Colors.deepPurple,
                           ),
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/messageDetails',
-                              arguments: message,
-                            );
-                          },
                         ),
-                      );
-                    },
-                  ),
+                        subtitle: Text(
+                          message['contenu'] ?? 'Pas de contenu',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        trailing: Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.deepPurple,
+                        ),
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text(
+                                  message['repondre'] != null
+                                      ? message['repondre']['titre']
+                                          .toString()
+                                      // Suggested code may be subject to a license. Learn more: ~LicenseLog:594148223.
+                                      : 'Aucune réponse',
+                                ),
+                                content: Text(
+                                  message['repondre'] != null
+                                      ? message['repondre']['contenu']
+                                          .toString()
+                                      : 'Aucune réponse',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      // Action à réaliser
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Text('OK'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -145,10 +168,7 @@ class _ForumPageState extends State<ForumPage> {
         },
         backgroundColor: Colors.deepPurple,
         elevation: 10,
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-        ),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
