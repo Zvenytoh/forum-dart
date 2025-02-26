@@ -47,13 +47,13 @@ class _ForumPageState extends State<ForumPage> {
     });
     switch (index) {
       case 0:
-        Navigator.pushReplacementNamed(context, '/');
+        Navigator.popAndPushNamed(context, '/');
         break;
       case 1:
-        Navigator.pushReplacementNamed(context, '/forum');
+        Navigator.popAndPushNamed(context, '/forum');
         break;
       case 2:
-        Navigator.pushReplacementNamed(context, '/profile');
+        Navigator.popAndPushNamed(context, '/profil');
         break;
     }
   }
