@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import 'package:myapp/widgets/bottomNavBar.dart'; // Assurez-vous que le BottomNavBar est importé
 
 class ForumPage extends StatefulWidget {
   const ForumPage({super.key});
@@ -13,6 +14,7 @@ class _ForumPageState extends State<ForumPage> {
   List<Map<String, dynamic>> _messages = [];
   bool _isLoading = true;
   String _errorMessage = '';
+  int _currentIndex = 1; // ForumPage devrait être sélectionné dans la bottom nav
 
   @override
   void initState() {
@@ -39,6 +41,23 @@ class _ForumPageState extends State<ForumPage> {
     }
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+    switch (index) {
+      case 0:
+        Navigator.pushReplacementNamed(context, '/');
+        break;
+      case 1:
+        Navigator.pushReplacementNamed(context, '/forum');
+        break;
+      case 2:
+        Navigator.pushReplacementNamed(context, '/profile');
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,7 +72,6 @@ class _ForumPageState extends State<ForumPage> {
         ),
         backgroundColor: Colors.deepPurple,
         elevation: 10,
-        iconTheme: IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -79,85 +97,82 @@ class _ForumPageState extends State<ForumPage> {
             end: Alignment.bottomRight,
           ),
         ),
-        child:
-            _isLoading
-                ? const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                )
-                : _errorMessage.isNotEmpty
+        child: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              )
+            : _errorMessage.isNotEmpty
                 ? Center(
-                  child: Text(
-                    _errorMessage,
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-                )
+                    child: Text(
+                      _errorMessage,
+                      style: TextStyle(fontSize: 18, color: Colors.white),
+                    ),
+                  )
                 : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _messages.length,
-                  itemBuilder: (context, index) {
-                    final message = _messages[index];
-                    return Card(
-                      elevation: 10,
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(16),
-                        title: Text(
-                          message['titre'] ?? 'Sans titre',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final message = _messages[index];
+                      return Card(
+                        elevation: 10,
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(16),
+                          title: Text(
+                            message['titre'] ?? 'Sans titre',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.deepPurple,
+                            ),
+                          ),
+                          subtitle: Text(
+                            message['contenu'] ?? 'Pas de contenu',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          trailing: Icon(
+                            Icons.arrow_forward_ios,
                             color: Colors.deepPurple,
                           ),
-                        ),
-                        subtitle: Text(
-                          message['contenu'] ?? 'Pas de contenu',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                        trailing: Icon(
-                          Icons.arrow_forward_ios,
-                          color: Colors.deepPurple,
-                        ),
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: Text(
-                                  message['repondre'] != null
-                                      ? message['repondre']['titre']
-                                          .toString()
-                                      // Suggested code may be subject to a license. Learn more: ~LicenseLog:594148223.
-                                      : 'Aucune réponse',
-                                ),
-                                content: Text(
-                                  message['repondre'] != null
-                                      ? message['repondre']['contenu']
-                                          .toString()
-                                      : 'Aucune réponse',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () {
-                                      // Action à réaliser
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text('OK'),
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text(
+                                    message['repondre'] != null
+                                        ? message['repondre']['titre']
+                                            .toString()
+                                        : 'Aucune réponse',
                                   ),
-                                ],
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
+                                  content: Text(
+                                    message['repondre'] != null
+                                        ? message['repondre']['contenu']
+                                            .toString()
+                                        : 'Aucune réponse',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text('OK'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -169,6 +184,10 @@ class _ForumPageState extends State<ForumPage> {
         backgroundColor: Colors.deepPurple,
         elevation: 10,
         child: const Icon(Icons.add, color: Colors.white),
+      ),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _currentIndex,
+        onTap: _onItemTapped,
       ),
     );
   }
