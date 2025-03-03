@@ -1,7 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
+/// Page qui permet de rechercher des posts dans le forum.
 class SearchForumPage extends StatefulWidget {
   const SearchForumPage({super.key});
 
@@ -9,6 +10,183 @@ class SearchForumPage extends StatefulWidget {
   State<SearchForumPage> createState() => _SearchForumPageState();
 }
 
+/// État de la page de recherche, gère la logique de recherche et l'affichage des résultats.
+class _SearchForumPageState extends State<SearchForumPage> {
+  // Contrôleur du champ de recherche.
+  final TextEditingController _searchController = TextEditingController();
+  // FocusNode pour le champ de recherche.
+  final FocusNode _searchFocusNode = FocusNode();
+
+  // Liste complète des résultats de la recherche.
+  List<ForumPost> _searchResults = [];
+  // Indicateur de chargement pendant la requête.
+  bool _isLoading = false;
+  // Message d'erreur en cas de problème de connexion ou de réponse inattendue.
+  String? _errorMessage;
+  // Nombre de résultats actuellement affichés.
+  int _displayedItemCount = 10;
+
+  /// Effectue la recherche sur le forum en fonction de la requête saisie.
+  Future<void> _searchForum(String query) async {
+    // Si la requête est vide, on réinitialise les résultats et le compteur d'affichage.
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _displayedItemCount = 10;
+      });
+      return;
+    }
+
+    // Mise àforum-dart.git forum-dartgit-2884883 Setting up workspace Initializing environment Building environmentFinalizing jour de l'état : lancement du chargement, réinitialisation du message d'erreur
+    // et remise à zéro du nombre d'éléments affichés.
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _displayedItemCount = 10;
+    });
+
+    try {
+      // Construction de l'URI avec les paramètres de recherche.
+      final uri = Uri.https(
+        's3-4204.nuage-peda.fr', // Domaine
+        '/forum/api/messages',   // Chemin
+        {
+          'titre': query,
+          'contenu': query,
+        },
+      );
+
+      // Envoi de la requête HTTP GET.
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        // Décodage de la réponse JSON.
+        final Map<String, dynamic> responseData = json.decode(response.body);
+
+        // Vérification de la présence de la clé attendue.
+        if (responseData.containsKey('hydra:member')) {
+          final List<dynamic> data = responseData['hydra:member'];
+          setState(() {
+            // Transformation des données JSON en objets ForumPost.
+            _searchResults =
+                data.map((json) => ForumPost.fromJson(json)).toList();
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _errorMessage = 'Format de réponse inattendu';
+            _isLoading = false;
+          });
+        }
+      } else {
+        setState(() {
+          _errorMessage = 'Erreur serveur (${response.statusCode})';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Erreur de connexion: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    // Libération des ressources des contrôleurs et du FocusNode.
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      // AppBar avec le champ de recherche.
+      appBar: AppBar(
+        title: _SearchBar(
+          controller: _searchController,
+          focusNode: _searchFocusNode,
+          onChanged: (query) => _searchForum(query),
+        ),
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  /// Construit le corps de la page en fonction de l'état actuel (chargement, erreur, résultats).
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_errorMessage != null) {
+      return Center(child: ErrorMessage(message: _errorMessage!));
+    }
+
+    // Limitation des résultats affichés en fonction de _displayedItemCount.
+    final int currentCount = _displayedItemCount > _searchResults.length
+        ? _searchResults.length
+        : _displayedItemCount;
+    final List<ForumPost> displayedResults =
+        _searchResults.take(currentCount).toList();
+
+    return RefreshIndicator(
+      onRefresh: () => _searchForum(_searchController.text),
+      child: CustomScrollView(
+        slivers: [
+          if (_searchResults.isNotEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Text(
+                  '${_searchResults.length} résultat(s) trouvé(s)',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+            ),
+          if (_searchResults.isNotEmpty)
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) =>
+                    PostItem(post: displayedResults[index]),
+                childCount: displayedResults.length,
+              ),
+            ),
+          // Bouton "Afficher plus" s'il reste des cards à afficher.
+          if (_searchResults.length > _displayedItemCount)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      // Augmente le nombre d'éléments affichés de 10,
+                      // sans dépasser le nombre total de résultats.
+                      _displayedItemCount = (_displayedItemCount + 10) >
+                              _searchResults.length
+                          ? _searchResults.length
+                          : _displayedItemCount + 10;
+                    });
+                  },
+                  child: const Text('Afficher plus'),
+                ),
+              ),
+            ),
+          // Affichage de l'état vide si aucun résultat n'est disponible.
+          if (_searchResults.isEmpty)
+            SliverFillRemaining(
+              child: EmptyState(searchQuery: _searchController.text),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Widget représentant la barre de recherche.
 class _SearchBar extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
@@ -26,10 +204,12 @@ class _SearchBar extends StatelessWidget {
       controller: controller,
       focusNode: focusNode,
       decoration: InputDecoration(
+        // Fond rempli pour une meilleure visibilité.
         filled: true,
-        fillColor: Theme.of(context).colorScheme.surfaceVariant,
+        fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
         hintText: 'Rechercher sujets, questions...',
         prefixIcon: const Icon(Icons.search_rounded),
+        // Affichage d'un bouton pour effacer le champ uniquement si du texte est présent.
         suffixIcon: controller.text.isNotEmpty
             ? IconButton(
                 icon: const Icon(Icons.clear_rounded),
@@ -51,124 +231,15 @@ class _SearchBar extends StatelessWidget {
   }
 }
 
-
-class _SearchForumPageState extends State<SearchForumPage> {
-  final TextEditingController _searchController = TextEditingController();
-  final FocusNode _searchFocusNode = FocusNode();
-  List<ForumPost> _searchResults = [];
-  bool _isLoading = false;
-  String? _errorMessage;
-
-  Future<void> _searchForum(String query) async {
-  if (query.isEmpty) {
-    setState(() => _searchResults = []);
-    return;
-  }
-
-  setState(() {
-    _isLoading = true;
-    _errorMessage = null;
-  });
-
-  try {
-    final response = await http.get(
-      Uri.https(
-        's3-4204.nuage-peda.fr', // Domaine
-        '/forum/api/messages', // Chemin
-        {'titre': query, 'contenu': query}, // Paramètres de requête
-      ),
-    );
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> responseData = json.decode(response.body);
-
-      // Vérifiez si la clé 'hydra:member' existe
-      if (responseData.containsKey('hydra:member')) {
-        final List<dynamic> data = responseData['hydra:member'];
-        setState(() {
-          _searchResults = data.map((json) => ForumPost.fromJson(json)).toList();
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _errorMessage = 'Format de réponse inattendu';
-          _isLoading = false;
-        });
-      }
-    } else {
-      setState(() {
-        _errorMessage = 'Erreur serveur (${response.statusCode})';
-        _isLoading = false;
-      });
-    }
-  } catch (e) {
-    setState(() {
-      _errorMessage = 'Erreur de connexion: $e';
-      _isLoading = false;
-    });
-  }
-}
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: _SearchBar(
-          controller: _searchController,
-          focusNode: _searchFocusNode,
-          onChanged: (query) => _searchForum(query),
-        ),
-      ),
-      body: _buildBody(),
-    );
-  }
-
-  Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_errorMessage != null) {
-      return Center(child: ErrorMessage(message: _errorMessage!));
-    }
-
-    return RefreshIndicator(
-      onRefresh: () => _searchForum(_searchController.text),
-      child: CustomScrollView(
-        slivers: [
-          if (_searchResults.isNotEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Text(
-                  '${_searchResults.length} résultat(s) trouvé(s)',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
-            ),
-          _searchResults.isNotEmpty
-              ? SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) => PostItem(post: _searchResults[index]),
-                    childCount: _searchResults.length,
-                  ),
-                )
-              : SliverFillRemaining(
-                  child: EmptyState(searchQuery: _searchController.text),
-                ),
-        ],
-      ),
-    );
-  }
-}
-
+/// Modèle représentant un post du forum.
 class ForumPost {
+  final int id;
   final String title;
   final String content;
   final String author;
   final int comments;
   final DateTime date;
   final String category;
-  final int id;
 
   ForumPost({
     required this.id,
@@ -180,19 +251,21 @@ class ForumPost {
     required this.category,
   });
 
+  /// Crée un objet [ForumPost] à partir d'une map JSON.
   factory ForumPost.fromJson(Map<String, dynamic> json) {
-  return ForumPost(
-    id: json['id'] ?? 0, // Valeur par défaut si 'id' est null
-    title: json['titre'] ?? 'Sans titre', // Valeur par défaut si 'titre' est null
-    content: json['contenu'] ?? '', // Valeur par défaut si 'contenu' est null
-    author: json['envoyer'] ?? 'Anonyme', // Valeur par défaut si 'envoyer' est null
-    comments: 0, // Champ facultatif
-    date: DateTime.tryParse(json['datePoste'] ?? '') ?? DateTime.now(), // Gestion de date null
-    category: 'Général', // Champ facultatif
-  );
-}
+    return ForumPost(
+      id: json['id'] ?? 0, // Valeur par défaut si 'id' est null.
+      title: json['titre'] ?? 'Sans titre',
+      content: json['contenu'] ?? '',
+      author: json['envoyer'] ?? 'Anonyme',
+      comments: 0, // Champ facultatif avec valeur par défaut.
+      date: DateTime.tryParse(json['datePoste'] ?? '') ?? DateTime.now(),
+      category: 'Général', // Champ facultatif avec valeur par défaut.
+    );
+  }
 }
 
+/// Widget affichant un message d'erreur avec une icône et un bouton de réessai.
 class ErrorMessage extends StatelessWidget {
   final String message;
 
@@ -203,7 +276,8 @@ class ErrorMessage extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.error_outline_rounded, size: 60, color: Colors.red),
+        const Icon(Icons.error_outline_rounded,
+            size: 60, color: Colors.red),
         const SizedBox(height: 16),
         Text(
           'Erreur de chargement',
@@ -217,7 +291,9 @@ class ErrorMessage extends StatelessWidget {
           ),
         ),
         FilledButton(
-          onPressed: () {/* Reload */},
+          onPressed: () {
+            // TODO: Implémenter la logique de réessai.
+          },
           child: const Text('Réessayer'),
         ),
       ],
@@ -225,6 +301,7 @@ class ErrorMessage extends StatelessWidget {
   }
 }
 
+/// Widget qui affiche un post dans une carte.
 class PostItem extends StatelessWidget {
   final ForumPost post;
 
@@ -242,6 +319,7 @@ class PostItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Ligne affichant la catégorie et le nombre de réponses.
               Row(
                 children: [
                   Chip(
@@ -256,6 +334,7 @@ class PostItem extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
+              // Titre du post.
               Text(
                 post.title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -263,12 +342,19 @@ class PostItem extends StatelessWidget {
                     ),
               ),
               const SizedBox(height: 8),
+              // Aperçu du contenu du post.
               Text(
                 post.content,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.7),
                     ),
               ),
             ],
@@ -278,11 +364,13 @@ class PostItem extends StatelessWidget {
     );
   }
 
+  /// Navigation vers le détail du post.
   void _navigateToPost(BuildContext context) {
-    // Navigation vers le détail du post
+    // TODO: Implémenter la navigation vers le détail du post.
   }
 }
 
+/// Widget affiché lorsqu'aucun résultat n'est trouvé.
 class EmptyState extends StatelessWidget {
   final String searchQuery;
 
@@ -316,5 +404,3 @@ class EmptyState extends StatelessWidget {
     );
   }
 }
-// Les autres composants (_SearchBar, PostItem, EmptyState, ErrorMessage) 
-// restent identiques à la version précédente

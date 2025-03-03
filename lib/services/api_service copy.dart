@@ -80,53 +80,6 @@ class ApiService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchTrendingMessages() async {
-  final uri = Uri.parse('http://s3-4204.nuage-peda.fr/forum/messages/trending?page=1'); // URL complète avec baseUrl
-
-  final token = await jwtToken;
-  final headers = {
-    'Accept': 'application/ld+json',
-    'Authorization': token != null ? 'Bearer $token' : '',
-  };
-
-  try {
-    final response = await http.get(uri, headers: headers);
-
-    if (response.statusCode == 200) {
-      // Décode la réponse JSON
-      final data = json.decode(response.body);
-
-      // Assurez-vous que la réponse contient la clé 'hydra:member'
-      if (data['hydra:member'] != null) {
-        // Extrait les messages dans un format attendu
-        List<Map<String, dynamic>> messages = [];
-        
-        for (var message in data['hydra:member']) {
-          messages.add({
-            'id': message['id'],
-            'titre': message['titre'],
-            'datePoste': message['datePoste'],
-            'contenu': message['contenu'],
-            'envoyer': message['envoyer'],
-            'score': message['score'],
-          });
-        }
-
-        return messages;
-      } else {
-        throw Exception('Pas de messages trouvés');
-      }
-    } else {
-      throw Exception('Erreur lors du chargement des messages tendances');
-    }
-  } catch (e) {
-    throw Exception('Erreur réseau : $e');
-  }
-}
-
-
-
-
   // Fonction pour envoyer un message
   Future<Map<String, dynamic>> sendMessage(String titre, String contenu) async {
     final data = {'titre': titre, 'contenu': contenu};
@@ -183,6 +136,8 @@ class ApiService {
       final userId = data['id']; // Récupération de l'id de l'utilisateur
       final userEmail =
           data['email']; // Récupération de l'email de l'utilisateur
+      print('User ID: $userId');
+      print('User Email: $userEmail');
 
       // Stocker l'id et l'email dans le stockage sécurisé
       await storage.write(key: 'user_id', value: userId.toString());
@@ -194,7 +149,8 @@ class ApiService {
     }
   }
 
-  Future<void> vote(int messageId, int newVoteType) async {
+  // Fonction pour enregistrer le vote de l'utilisateur
+  Future<void> vote(int messageId, int voteType) async {
     final token = await storage.read(key: 'jwt_token');
     final userId = await storage.read(
       key: 'user_id',
@@ -207,86 +163,37 @@ class ApiService {
     // Construire les IRIs absolues
     final messageIri = '/forum/api/messages/$messageId';
     final userIri = '/forum/api/users/$userId'; // IRI absolue de l'utilisateur
+    
+    // Créer le corps de la requête
+    final requestBody = {
+      'user':
+          userIri, // Par exemple "https://s3-4204.nuage-peda.fr/forum/api/users/42"
+      'message':
+          messageIri, // Par exemple "https://s3-4204.nuage-peda.fr/forum/api/messages/123"
+      'voteType': voteType, // Valeur de vote : 1 pour upvote, -1 pour downvote
+      'createdAt': DateTime.now().toIso8601String(), // Format ISO 8601
+    };
 
     try {
-      // 1. Récupérer le vote existant de l'utilisateur pour ce message
-      final votesResponse = await http.get(
-        Uri.parse('${_baseUrl}votes?user=$userIri&message=$messageIri'),
-        headers: {'Authorization': 'Bearer $token'},
-      );
-
-      int finalVoteType = newVoteType;
-      int previousVoteType = 0;
-
-      // 2. Vérifier si l'utilisateur a déjà voté
-      if (votesResponse.statusCode == 200) {
-        final existingVotes =
-            json.decode(votesResponse.body)['hydra:member'] as List;
-        if (existingVotes.isNotEmpty) {
-          final existingVote = existingVotes.first;
-          previousVoteType = existingVote['voteType'] as int;
-
-          // Annuler le vote si l'utilisateur clique à nouveau sur le même bouton
-          if (previousVoteType == newVoteType) {
-            finalVoteType = 0; // Annuler le vote
-            await http.delete(
-              Uri.parse('${_baseUrl}votes/${existingVote['id']}'),
-              headers: {'Authorization': 'Bearer $token'},
-            );
-          } else {
-            // Mettre à jour le vote existant si l'utilisateur change son vote
-            await http.patch(
-              Uri.parse('${_baseUrl}votes/${existingVote['id']}'),
-              headers: {
-                'Content-Type': 'application/merge-patch+json',
-                'Authorization': 'Bearer $token',
-              },
-              body: json.encode({'voteType': newVoteType}),
-            );
-          }
-        }
-      }
-
-      // 3. Si c'est un nouveau vote (ou un vote annulé et remplacé)
-      if (finalVoteType != 0) {
-        await http.post(
-          Uri.parse('${_baseUrl}votes'),
-          headers: {
-            'Content-Type': 'application/ld+json',
-            'Authorization': 'Bearer $token',
-          },
-          body: json.encode({
-            'user': userIri,
-            'message': messageIri,
-            'voteType': finalVoteType,
-            'createdAt': DateTime.now().toIso8601String(),
-          }),
-        );
-      }
-
-      // 4. Mettre à jour le score total du message
-      final patchRequestBody = {
-        'score':
-            newVoteType - previousVoteType, // Calculer la différence de score
-      };
-
-      final patchResponse = await http.patch(
-        Uri.parse('${_baseUrl}messages/$messageId'),
+      // Envoyer la requête POST pour enregistrer le vote
+      final response = await http.post(
+        Uri.parse('${_baseUrl}votes'),
         headers: {
-          'Content-Type': 'application/merge-patch+json',
+          'Content-Type': 'application/ld+json',
           'Authorization': 'Bearer $token',
         },
-        body: json.encode(patchRequestBody),
+        body: json.encode(requestBody),
       );
 
-      if (patchResponse.statusCode != 200) {
+      
+      if (response.statusCode != 201) {
+        // Log l'erreur si la requête échoue
         throw HttpException(
-          'Erreur HTTP ${patchResponse.statusCode}: ${patchResponse.body}',
+          'Erreur HTTP ${response.statusCode}: ${response.body}',
         );
       }
-
-      print('Vote enregistré et score mis à jour avec succès !');
     } catch (e) {
+      // Log des erreurs exceptionnelles
       print('Erreur lors de l\'envoi de la requête: $e');
       throw HttpException('Erreur lors de l\'envoi du vote: $e');
     }
