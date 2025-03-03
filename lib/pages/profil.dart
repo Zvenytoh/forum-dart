@@ -22,6 +22,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _checkAuthentication() async {
     final isAuthenticated = await ApiService().checkAuthentication();
+    print("check authentification");
+    print(isAuthenticated);
     if (isAuthenticated) {
       _userData = ApiService().getUserData();
     }
@@ -66,10 +68,12 @@ class _ProfilePageState extends State<ProfilePage> {
         child: FutureBuilder<Map<String, dynamic>>(
           future: _isLoggedIn ? _userData : null,
           builder: (context, snapshot) {
-            return Center(  // Utilisation du widget Center
+            return Center(
+              // Utilisation du widget Center
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center, // Centrer les éléments
+                crossAxisAlignment:
+                    CrossAxisAlignment.center, // Centrer les éléments
                 children: [
                   // Avatar et informations utilisateur
                   CircleAvatar(
@@ -85,7 +89,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   const SizedBox(height: 20),
                   Text(
                     _isLoggedIn
-                        ? (snapshot.data?['name'] ?? 'Invité') // Correction ici
+                        ? (snapshot.data?['prenom'] ??
+                            'Invité') // Correction ici
                         : 'Invité',
                     style: const TextStyle(
                       fontSize: 24,
@@ -109,11 +114,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       onTap: () => Navigator.pushNamed(context, '/editProfile'),
                     ),
                     _buildProfileSection(
-                      icon: Icons.security,
-                      title: 'Sécurité',
-                      onTap: () => Navigator.pushNamed(context, '/security'),
-                    ),
-                    _buildProfileSection(
                       icon: Icons.settings,
                       title: 'Paramètres',
                       onTap: () => Navigator.pushNamed(context, '/settings'),
@@ -127,83 +127,88 @@ class _ProfilePageState extends State<ProfilePage> {
                     child:
                         _isLoggedIn
                             ? ElevatedButton(
-                                onPressed: () async {
-                                  await ApiService().logout();
-                                  if (!context.mounted) return;
-                                  Navigator.pushReplacementNamed(context, '/profil');
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 50,
-                                    vertical: 15,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(30),
-                                  ),
+                              onPressed: () async {
+                                await ApiService().logout();
+                                if (!context.mounted) return;
+                                Navigator.pushReplacementNamed(
+                                  context,
+                                  '/profil',
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 50,
+                                  vertical: 15,
                                 ),
-                                child: const Text(
-                                  'Se déconnecter',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.white,
-                                  ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
                                 ),
-                              )
-                            : Column(
-                                children: [
-                                  ElevatedButton(
-                                    onPressed:
-                                        () =>
-                                            Navigator.pushNamed(context, '/login'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.deepPurple,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 50,
-                                        vertical: 15,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      'Se Connecter',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 15),
-                                  OutlinedButton(
-                                    onPressed:
-                                        () => Navigator.pushNamed(
-                                          context,
-                                          '/register',
-                                        ),
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 50,
-                                        vertical: 15,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                      side: const BorderSide(
-                                        color: Colors.deepPurple,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      'S\'inscrire',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.deepPurple,
-                                      ),
-                                    ),
-                                  ),
-                                ],
                               ),
+                              child: const Text(
+                                'Se déconnecter',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )
+                            : Column(
+                              children: [
+                                ElevatedButton(
+                                  onPressed:
+                                      () => Navigator.pushNamed(
+                                        context,
+                                        '/login',
+                                      ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.deepPurple,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 50,
+                                      vertical: 15,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Se Connecter',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 15),
+                                OutlinedButton(
+                                  onPressed:
+                                      () => Navigator.pushNamed(
+                                        context,
+                                        '/register',
+                                      ),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 50,
+                                      vertical: 15,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                    side: const BorderSide(
+                                      color: Colors.deepPurple,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'S\'inscrire',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.deepPurple,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                   ),
                   const SizedBox(height: 40),
                 ],

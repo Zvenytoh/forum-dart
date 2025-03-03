@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/services/api_service.dart'; // Importez votre ApiService
 import 'package:myapp/widgets/bottomNavBar.dart';
 
 class HomePage extends StatefulWidget {
@@ -10,24 +11,39 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
+  bool _isLoggedIn = false; // Variable pour suivre l'état de connexion
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthentication(); // Vérifier l'état de connexion au chargement
+  }
+
+  // Vérifie si l'utilisateur est connecté
+  Future<void> _checkAuthentication() async {
+    final isAuthenticated = await ApiService().checkAuthentication();
+    setState(() {
+      _isLoggedIn = isAuthenticated;
+    });
+  }
 
   void _onItemTapped(int index) {
-  setState(() {
-    _currentIndex = index;
-  });
+    setState(() {
+      _currentIndex = index;
+    });
 
-  switch (index) {
-    case 0:
-      Navigator.popAndPushNamed(context, '/');
-      break;
-    case 1:
-      Navigator.popAndPushNamed(context, '/forum');
-      break;
-    case 2:
-      Navigator.popAndPushNamed(context, '/profil');
-      break;
+    switch (index) {
+      case 0:
+        Navigator.popAndPushNamed(context, '/');
+        break;
+      case 1:
+        Navigator.popAndPushNamed(context, '/forum');
+        break;
+      case 2:
+        Navigator.popAndPushNamed(context, '/profil');
+        break;
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -43,18 +59,29 @@ class _HomePageState extends State<HomePage> {
         ),
         backgroundColor: Colors.deepPurple,
         elevation: 10,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.login, color: Colors.white),
-            onPressed: () => Navigator.pushNamed(context, '/login'),
-            tooltip: 'Se connecter',
-          ),
-          IconButton(
-            icon: const Icon(Icons.person_add, color: Colors.white),
-            onPressed: () => Navigator.pushNamed(context, '/register'),
-            tooltip: 'S\'inscrire',
-          ),
-        ],
+        actions: _isLoggedIn
+            ? [] // Si connecté, pas de boutons
+            : [
+                // Si non connecté, afficher les boutons
+                IconButton(
+                  icon: const Icon(Icons.login, color: Colors.white),
+                  onPressed: () async {
+                    await Navigator.pushNamed(context, '/login');
+                    if (!context.mounted) return;
+                    await _checkAuthentication(); // Rafraîchir l'état après connexion
+                  },
+                  tooltip: 'Se connecter',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.person_add, color: Colors.white),
+                  onPressed: () async {
+                    await Navigator.pushNamed(context, '/register');
+                    if (!context.mounted) return;
+                    await _checkAuthentication(); // Rafraîchir l'état après inscription
+                  },
+                  tooltip: 'S\'inscrire',
+                ),
+              ],
       ),
       body: SingleChildScrollView(
         child: Column(

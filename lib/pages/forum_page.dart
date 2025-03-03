@@ -84,6 +84,13 @@ class _ForumPageState extends State<ForumPage> {
             },
             tooltip: 'Déconnexion',
           ),
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              Navigator.popAndPushNamed(context, '/search');
+            },
+            tooltip: 'Recherche',
+          ),
         ],
       ),
       body: Container(
