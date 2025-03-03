@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/pages/forum_page.dart';
-import 'package:myapp/pages/home_page.dart';
+import 'package:myapp/pages/search_page.dart';
 import 'package:myapp/pages/login_page.dart';
-import 'package:myapp/pages/new_message_page.dart';
-import 'package:myapp/pages/profil.dart';
 import 'package:myapp/pages/register_page.dart';
+import 'package:myapp/pages/home_page.dart';
+import 'package:myapp/pages/new_message_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,7 +26,8 @@ class MyApp extends StatelessWidget {
         '/register': (context) => const RegisterPage(),
         '/forum': (context) => const ForumPage(),
         '/newMessage': (context) => const NewMessagePage(),
-        '/profil': (context) => const ProfilePage(),
+        '/search': (context) => const SearchForumPage(),
+
       },
     );
   }
