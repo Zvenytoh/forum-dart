@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/pages/forum_page.dart';
+import 'package:myapp/pages/profil.dart';
 import 'package:myapp/pages/search_page.dart';
 import 'package:myapp/pages/login_page.dart';
 import 'package:myapp/pages/register_page.dart';
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
         '/forum': (context) => const ForumPage(),
         '/newMessage': (context) => const NewMessagePage(),
         '/search': (context) => const SearchForumPage(),
-
+        '/profil': (context) => const ProfilePage(),
       },
     );
   }
