@@ -12,22 +12,22 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
   void _onItemTapped(int index) {
-  setState(() {
-    _currentIndex = index;
-  });
+    setState(() {
+      _currentIndex = index;
+    });
 
-  switch (index) {
-    case 0:
-      Navigator.popAndPushNamed(context, '/');
-      break;
-    case 1:
-      Navigator.popAndPushNamed(context, '/forum');
-      break;
-    case 2:
-      Navigator.popAndPushNamed(context, '/profil');
-      break;
+    switch (index) {
+      case 0:
+        Navigator.popAndPushNamed(context, '/');
+        break;
+      case 1:
+        Navigator.popAndPushNamed(context, '/forum');
+        break;
+      case 2:
+        Navigator.popAndPushNamed(context, '/profil');
+        break;
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +44,11 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.deepPurple,
         elevation: 10,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.white),
+            onPressed: () => Navigator.pushNamed(context, '/search'),
+            tooltip: 'Recherche',
+          ),
           IconButton(
             icon: const Icon(Icons.login, color: Colors.white),
             onPressed: () => Navigator.pushNamed(context, '/login'),
