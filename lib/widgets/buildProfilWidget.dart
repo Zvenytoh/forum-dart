@@ -54,7 +54,7 @@ class AnimatedButton extends StatelessWidget {
   }
 }
 
-Widget _buildGuestContent(BuildContext context) {
+Widget buildGuestContent(BuildContext context) {
   return Column(
     children: [
       AnimatedButton(
@@ -73,22 +73,22 @@ Widget _buildGuestContent(BuildContext context) {
   );
 }
 
-Widget _buildLoggedInContent(BuildContext context) {
+Widget buildLoggedInContent(BuildContext context) {
   return Column(
     children: [
-      _buildProfileItem(
+      buildProfileItem(
         icon: Icons.person_outline,
         title: 'Modifier le profil',
         onTap: () => Navigator.pushNamed(context, '/edit-profile'),
       ),
       const Divider(height: 30),
-      _buildProfileItem(
+      buildProfileItem(
         icon: Icons.settings_outlined,
         title: 'Paramètres',
         onTap: () => Navigator.pushNamed(context, '/settings'),
       ),
       const Divider(height: 30),
-      _buildProfileItem(
+      buildProfileItem(
         icon: Icons.exit_to_app,
         title: 'Déconnexion',
         color: Colors.red,
@@ -103,7 +103,7 @@ Widget _buildLoggedInContent(BuildContext context) {
   );
 }
 
-Widget _buildProfileItem({
+Widget buildProfileItem({
   required IconData icon,
   required String title,
   Color color = Colors.deepPurple,
@@ -121,7 +121,7 @@ Widget _buildProfileItem({
   );
 }
 
-Widget _buildStatCard(String value, String label) {
+Widget buildStatCard(String value, String label) {
   return AnimatedContainer(
     duration: const Duration(milliseconds: 300),
     curve: Curves.easeInOut,
@@ -152,7 +152,7 @@ Widget _buildStatCard(String value, String label) {
   );
 }
 
-Widget _buildStatisticsSection() {
+Widget buildStatisticsSection() {
   return Column(
     children: [
       const SizedBox(height: 30),
@@ -174,16 +174,16 @@ Widget _buildStatisticsSection() {
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildStatCard('12', 'Messages'),
-          _buildStatCard('89', 'Followers'),
-          _buildStatCard('34', 'Abonnements'),
+          buildStatCard('12', 'Messages'),
+          buildStatCard('89', 'Followers'),
+          buildStatCard('34', 'Abonnements'),
         ],
       ),
     ],
   );
 }
 
-Widget _buildProfileAvatar(AsyncSnapshot<Map<String, dynamic>> snapshot) {
+Widget buildProfileAvatar(AsyncSnapshot<Map<String, dynamic>> snapshot) {
   return AnimatedContainer(
     duration: const Duration(milliseconds: 500),
     curve: Curves.easeInOut,
@@ -202,7 +202,7 @@ Widget _buildProfileAvatar(AsyncSnapshot<Map<String, dynamic>> snapshot) {
   );
 }
 
-Widget _buildProfileInfo(AsyncSnapshot<Map<String, dynamic>> snapshot) {
+Widget buildProfileInfo(AsyncSnapshot<Map<String, dynamic>> snapshot) {
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 20),
     child: Column(
