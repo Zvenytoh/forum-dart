@@ -67,6 +67,34 @@ class ApiService {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getUserMessages() async {
+    try {
+      // Envoyer une requête GET à l'API
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/messages'), // Endpoint pour récupérer les messages
+        headers: {
+          'Authorization': 'Bearer ${await jwtToken ?? ''}', // Ajouter le token d'authentification
+          'Content-Type': 'application/json',
+        },
+      );
+
+      // Vérifier le statut de la réponse
+      if (response.statusCode == 200) {
+        // Décoder la réponse JSON
+        final List<dynamic> data = jsonDecode(response.body);
+
+        // Convertir les données en List<Map<String, dynamic>>
+        return data.map((message) => message as Map<String, dynamic>).toList();
+      } else {
+        // Gérer les erreurs HTTP
+        throw Exception('Erreur HTTP: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Gérer les erreurs de connexion ou de traitement
+      throw Exception('Erreur lors de la récupération des messages: $e');
+    }
+  }
+
   // Récupère les données de l'utilisateur connecté
   Future<Map<String, dynamic>> getUserData() async {
     // Récupère l'ID de l'utilisateur depuis le stockage sécurisé
@@ -171,35 +199,24 @@ class ApiService {
   }
 
   // Récupère les messages paginés
-  Future<List<Map<String, dynamic>>> fetchMessages({int page = 1}) async {
-    // Construit l'URL pour récupérer les messages paginés
-    final uri = Uri.parse('$_baseUrl/messages?page=$page');
+  // Fonction pour récupérer les messages
+  Future<List<Map<String, dynamic>>> fetchMessages() async {
+    final uri = Uri.parse('${_baseUrl}messages?page=1');
+
     final headers = {
       'Accept': 'application/ld+json',
       'Authorization': 'Bearer ${await jwtToken ?? ''}',
     };
 
-    try {
-      // Envoie la requête GET à l'API
-      final response = await http.get(uri, headers: headers);
+    final response = await http.get(uri, headers: headers);
 
-      // Vérifie si la réponse est réussie (code HTTP 200)
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return List<Map<String, dynamic>>.from(data['hydra:member']);
-      } else {
-        // Si la réponse est une erreur, affiche un message d'erreur dans la console
-        print(
-          'Erreur HTTP fetchMessages ${response.statusCode}: ${response.body}',
-        );
-        throw HttpException(
-          'Erreur HTTP ${response.statusCode}: ${response.body}',
-        );
-      }
-    } catch (e) {
-      // En cas d'erreur réseau, affiche un message d'erreur dans la console
-      print('Erreur réseau fetchMessages: $e');
-      throw HttpException('Erreur réseau: $e');
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return List<Map<String, dynamic>>.from(data['hydra:member']);
+    } else {
+      throw HttpException(
+        'Erreur HTTP ${response.statusCode}: ${response.body}',
+      );
     }
   }
 
