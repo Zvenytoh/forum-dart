@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import 'package:myapp/widgets/bottomNavBar.dart';
-import 'package:myapp/widgets/message_card.dart'; // Importez le widget MessageCard
+import 'package:myapp/widgets/bottomNavBar.dart'; // Assurez-vous que le BottomNavBar est importé
 
 class ForumPage extends StatefulWidget {
   const ForumPage({super.key});
@@ -15,7 +14,7 @@ class _ForumPageState extends State<ForumPage> {
   List<Map<String, dynamic>> _messages = [];
   bool _isLoading = true;
   String _errorMessage = '';
-  int _currentIndex = 1;
+  int _currentIndex = 1; // ForumPage devrait être sélectionné dans la bottom nav
 
   @override
   void initState() {
@@ -42,31 +41,10 @@ class _ForumPageState extends State<ForumPage> {
     }
   }
 
-  Future<void> _handleVote(int messageId, int voteType) async {
-  final originalScore = _messages.firstWhere((m) => m['id'] == messageId)['score'];
-  print("Score initial: $originalScore");
-
-  // Mise à jour optimiste
-  setState(() {
-    _messages.firstWhere((m) => m['id'] == messageId)['score'] += voteType;
-    print("Mise à jour du score pour le message $messageId");
-  });
-
-  try {
-    await _apiService.vote(messageId, voteType);
-  } catch (e) {
-    // Rollback en cas d'erreur
-    setState(() {
-      _messages.firstWhere((m) => m['id'] == messageId)['score'] = originalScore;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Erreur lors du vote: ${e.toString()}')),
-    );
-  }
-}
-
   void _onItemTapped(int index) {
-    setState(() => _currentIndex = index);
+    setState(() {
+      _currentIndex = index;
+    });
     switch (index) {
       case 0:
         Navigator.popAndPushNamed(context, '/');
@@ -127,7 +105,7 @@ class _ForumPageState extends State<ForumPage> {
                 ? Center(
                     child: Text(
                       _errorMessage,
-                      style: const TextStyle(fontSize: 18, color: Colors.white),
+                      style: TextStyle(fontSize: 18, color: Colors.white),
                     ),
                   )
                 : ListView.builder(
@@ -135,17 +113,73 @@ class _ForumPageState extends State<ForumPage> {
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
                       final message = _messages[index];
-                      return MessageCard(
-                        message: message,
-                        // Utilisation du callback onVote pour gérer le vote (1 pour like, -1 pour dislike)
-                        onVote: (voteType) => _handleVote(message['id'], voteType),
+                      return Card(
+                        elevation: 10,
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(16),
+                          title: Text(
+                            message['titre'] ?? 'Sans titre',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.deepPurple,
+                            ),
+                          ),
+                          subtitle: Text(
+                            message['contenu'] ?? 'Pas de contenu',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          trailing: Icon(
+                            Icons.arrow_forward_ios,
+                            color: Colors.deepPurple,
+                          ),
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text(
+                                    message['repondre'] != null
+                                        ? message['repondre']['titre']
+                                            .toString()
+                                        : 'Aucune réponse',
+                                  ),
+                                  content: Text(
+                                    message['repondre'] != null
+                                        ? message['repondre']['contenu']
+                                            .toString()
+                                        : 'Aucune réponse',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: Text('OK'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
                       );
                     },
                   ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, '/newMessage').then((_) => _loadMessages());
+          Navigator.pushNamed(
+            context,
+            '/newMessage',
+          ).then((_) => _loadMessages());
         },
         backgroundColor: Colors.deepPurple,
         elevation: 10,
