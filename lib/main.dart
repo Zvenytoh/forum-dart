@@ -5,7 +5,6 @@ import 'package:myapp/pages/login_page.dart';
 import 'package:myapp/pages/register_page.dart';
 import 'package:myapp/pages/home_page.dart';
 import 'package:myapp/pages/new_message_page.dart';
-import 'package:myapp/pages/trending_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,7 +27,7 @@ class MyApp extends StatelessWidget {
         '/forum': (context) => const ForumPage(),
         '/newMessage': (context) => const NewMessagePage(),
         '/search': (context) => const SearchForumPage(),
-        '/trending': (context) => const TrendingPage(),
+       
 
       },
     );
