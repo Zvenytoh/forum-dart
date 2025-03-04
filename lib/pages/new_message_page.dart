@@ -34,7 +34,7 @@ class _NewMessagePageState extends State<NewMessagePage> {
     } on HttpException catch (e) {
       setState(() => _errorMessage = e.toString());
     } catch (e) {
-      setState(() => _errorMessage = 'Erreur inconnue');
+      setState(() => _errorMessage = 'Erreur inconnue ${e.toString()}');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
