@@ -213,6 +213,7 @@ class _ProfilePageState extends State<ProfilePage>
           builder: (context, userSnapshot) {
             return Column(
               children: [
+                
                 const SizedBox(height: 24),
                 CircleAvatar(
                   radius: 60,
