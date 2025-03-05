@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:myapp/services/api_service.dart';
 import 'package:myapp/widgets/bottomNavBar.dart';
 import 'package:myapp/widgets/buildProfilWidget.dart';
@@ -124,6 +125,18 @@ class _ProfilePageState extends State<ProfilePage>
         ),
       ),
     );
+  }
+
+  String _formatDate(String dateString) {
+    try {
+      // Parse la chaîne de date en objet DateTime
+      final DateTime date = DateTime.parse(dateString);
+      // Formate la date selon le format souhaité
+      return DateFormat('dd/MM/yyyy à HH:mm').format(date);
+    } catch (e) {
+      // En cas d'erreur de parsing, retourne une chaîne par défaut
+      return 'Date inconnue';
+    }
   }
 
   Widget _buildInfoItem(IconData icon, String text) {
@@ -388,31 +401,32 @@ class AnimatedButton extends StatelessWidget {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
       width: double.infinity,
-      child: isOutlined
-          ? OutlinedButton.icon(
-              icon: Icon(icon, size: 20),
-              label: Text(text),
-              onPressed: onPressed,
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+      child:
+          isOutlined
+              ? OutlinedButton.icon(
+                icon: Icon(icon, size: 20),
+                label: Text(text),
+                onPressed: onPressed,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  side: const BorderSide(color: Colors.deepPurple, width: 2),
                 ),
-                side: const BorderSide(color: Colors.deepPurple, width: 2),
-              ),
-            )
-          : ElevatedButton.icon(
-              icon: Icon(icon, size: 20),
-              label: Text(text),
-              onPressed: onPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              )
+              : ElevatedButton.icon(
+                icon: Icon(icon, size: 20),
+                label: Text(text),
+                onPressed: onPressed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
-            ),
     );
   }
 }
