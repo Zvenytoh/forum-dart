@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:myapp/services/api_service.dart';
 import 'package:myapp/widgets/bottomNavBar.dart';
-import 'package:myapp/widgets/buildProfilWidget.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -17,8 +16,6 @@ class _ProfilePageState extends State<ProfilePage>
   late Future<Map<String, dynamic>> _userData;
   late Future<List<Map<String, dynamic>>> _userMessages;
   late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
 
   int _currentIndex = 2; // Index pour la BottomNavigationBar
 
@@ -213,7 +210,7 @@ class _ProfilePageState extends State<ProfilePage>
           builder: (context, userSnapshot) {
             return Column(
               children: [
-                
+
                 const SizedBox(height: 24),
                 CircleAvatar(
                   radius: 60,
