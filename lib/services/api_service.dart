@@ -139,12 +139,6 @@ class ApiService {
       // L'ID utilisateur est également retourné dans la réponse
       final userId = response['user_id'].toString();
 
-      // Vérifie si l'ID utilisateur est valide
-      if (userId == null) {
-        print('ID utilisateur manquant dans la réponse');
-        throw HttpException('ID utilisateur manquant');
-      }
-
       // Stocke l'ID utilisateur dans le stockage sécurisé
       await storage.write(key: 'user_id', value: userId);
 
@@ -277,16 +271,14 @@ class ApiService {
     final token = await storage.read(key: 'jwt_token');
     final userId = await storage.read(
       key: 'user_id',
-    ); // Récupérer l'ID de l'utilisateur
+    ); // récupérer l'id du user
 
     if (token == null || userId == null) {
       throw HttpException('Non authentifié ou ID utilisateur manquant');
     }
 
-    // Construire les IRIs absolues
     final messageIri = '/forum/api/messages/$messageId';
-    final userIri = '/forum/api/users/$userId'; // IRI absolue de l'utilisateur
-
+    final userIri = '/forum/api/users/$userId'; 
     try {
       // 1. Récupérer le vote existant de l'utilisateur pour ce message
       final votesResponse = await http.get(
@@ -305,15 +297,13 @@ class ApiService {
           final existingVote = existingVotes.first;
           previousVoteType = existingVote['voteType'] as int;
 
-          // Annuler le vote si l'utilisateur clique à nouveau sur le même bouton
           if (previousVoteType == newVoteType) {
-            finalVoteType = 0; // Annuler le vote
+            finalVoteType = 0; 
             await http.delete(
               Uri.parse('${_baseUrl}votes/${existingVote['id']}'),
               headers: {'Authorization': 'Bearer $token'},
             );
           } else {
-            // Mettre à jour le vote existant si l'utilisateur change son vote
             await http.patch(
               Uri.parse('${_baseUrl}votes/${existingVote['id']}'),
               headers: {
