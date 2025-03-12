@@ -90,12 +90,6 @@ class ApiService {
       // L'ID utilisateur est également retourné dans la réponse
       final userId = response['user_id'].toString();
 
-      // Vérifie si l'ID utilisateur est valide
-      if (userId == null) {
-        print('ID utilisateur manquant dans la réponse');
-        throw HttpException('ID utilisateur manquant');
-      }
-
       // Stocke l'ID utilisateur dans le stockage sécurisé
       await storage.write(key: 'user_id', value: userId);
 
